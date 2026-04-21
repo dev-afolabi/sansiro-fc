@@ -1,0 +1,35 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  min-height: 100dvh;
+}
+
+body {
+  @apply bg-surface text-ink font-body;
+}
+
+.app-shell {
+  @apply mx-auto max-w-[480px] min-h-[100dvh] pb-24 px-4 pt-5;
+}
+
+.card {
+  @apply bg-white border border-border rounded-xl p-4;
+}
+
+.btn-primary {
+  @apply w-full min-h-11 rounded-xl bg-ink text-white font-bold tracking-wide;
+}
+
+.btn-ghost {
+  @apply w-full min-h-11 rounded-xl bg-white border border-ink text-ink font-bold tracking-wide;
+}
+
+.btn-muted {
+  @apply w-full min-h-11 rounded-xl bg-[#F4F4F5] text-[#52525B] font-bold tracking-wide;
+}
