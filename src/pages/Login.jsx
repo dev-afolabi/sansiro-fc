@@ -38,8 +38,8 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-[400px] space-y-8">
+    <div className="min-h-screen bg-surface flex flex-col items-center justify-center px-4 py-8 overflow-y-auto">
+      <div className="w-full max-w-[400px] space-y-5">
         <div className="text-center space-y-2">
           <div className="mx-auto h-14 w-14 rounded-full bg-ink grid place-items-center">
             <span className="text-white text-2xl">⚽</span>
@@ -50,8 +50,8 @@ export default function Login() {
           </h1>
         </div>
 
-        <div className="bg-white border border-border rounded-2xl p-8 shadow-sm space-y-5">
-          <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="bg-white border border-border rounded-2xl p-6 shadow-sm space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label className="block text-sm font-semibold text-ink">Email</label>
               <input
@@ -100,16 +100,16 @@ export default function Login() {
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Create one"}
             </button>
           </div>
+        </div>
 
-          <div className="text-center pt-1">
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="text-sm text-ink-secondary hover:text-ink transition-colors"
-            >
-              ← Back to Home
-            </button>
-          </div>
+        <div className="text-center pb-2">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="text-sm text-ink-secondary hover:text-ink transition-colors py-2"
+          >
+            ← Back to Home
+          </button>
         </div>
       </div>
     </div>

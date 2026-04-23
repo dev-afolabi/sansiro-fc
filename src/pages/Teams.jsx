@@ -97,8 +97,9 @@ export default function Teams() {
         />
       </div>
 
-      <div className="card grid grid-cols-2 gap-4">
+      <div className="card space-y-4">
         <SubAdder team="A" value={subInputA} onChange={setSubInputA} players={players} allAssigned={allAssigned} onAdd={handleAddSub} />
+        <div className="border-t border-border" />
         <SubAdder team="B" value={subInputB} onChange={setSubInputB} players={players} allAssigned={allAssigned} onAdd={handleAddSub} />
       </div>
 

@@ -60,13 +60,13 @@ export default function Setup() {
     <section className="space-y-4">
       <h2 className="text-4xl font-black uppercase tracking-tight text-ink">Setup</h2>
 
-      <div className="card space-y-2">
+      <div className="card space-y-2 overflow-hidden">
         <p className="text-xs font-bold uppercase tracking-wider text-ink-secondary">Match Date</p>
         <input
           type="date"
           value={match.date?.slice(0, 10) || ""}
           onChange={(e) => updateMatchDate(match.id, e.target.value)}
-          className={inputClass}
+          className={`${inputClass} max-w-full min-w-0`}
         />
       </div>
 

@@ -111,3 +111,28 @@ CREATE POLICY "Owners can update match_days"
 
 CREATE POLICY "Owners can delete match_days"
   ON match_days FOR DELETE USING (auth.uid() = user_id);
+
+-- ============================================================
+-- MIGRATION v3: Global shared data — any authenticated user
+-- can read and write all records (single-club app model).
+-- Run these statements in the Supabase SQL editor.
+-- ============================================================
+
+-- Drop the owner-only UPDATE / DELETE policies
+DROP POLICY IF EXISTS "Owners can update players"    ON players;
+DROP POLICY IF EXISTS "Owners can delete players"    ON players;
+DROP POLICY IF EXISTS "Owners can update match_days" ON match_days;
+DROP POLICY IF EXISTS "Owners can delete match_days" ON match_days;
+
+-- Replace with authenticated-user-wide UPDATE / DELETE policies
+CREATE POLICY "Auth users can update players"
+  ON players FOR UPDATE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Auth users can delete players"
+  ON players FOR DELETE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Auth users can update match_days"
+  ON match_days FOR UPDATE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Auth users can delete match_days"
+  ON match_days FOR DELETE USING (auth.role() = 'authenticated');

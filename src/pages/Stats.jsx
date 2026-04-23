@@ -100,7 +100,7 @@ export default function Stats() {
             </p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
                   <th className="px-3 py-2 text-xs uppercase tracking-wider text-ink-secondary font-semibold text-left">#</th>
@@ -131,7 +131,7 @@ export default function Stats() {
                   return (
                     <tr key={p.id} className={`${rowBg} border-b border-border last:border-0`}>
                       <td className="px-3 py-2.5 font-black text-ink">{i + 1}</td>
-                      <td className="px-3 py-2.5 font-semibold text-ink">{p.name}</td>
+                      <td className="px-3 py-2.5 font-semibold text-ink max-w-[110px]"><span className="block truncate">{p.name}</span></td>
                       <td className="px-2 py-2.5 text-ink-secondary tabular-nums text-center">{p.matches_played}</td>
                       <td className="px-2 py-2.5 font-bold text-ink tabular-nums text-center">{p.points}</td>
                       <td className="px-2 py-2.5 text-ink-secondary tabular-nums text-center">{p.total_goals}</td>

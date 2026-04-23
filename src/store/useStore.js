@@ -28,6 +28,7 @@ export const useStore = create((set, get) => ({
   activeMatchId: null,
   loading: false,
 
+  // Loads ALL players and match days — shared across all authenticated users.
   initializeData: async () => {
     const user = await getUser()
     if (!user) return
@@ -37,7 +38,6 @@ export const useStore = create((set, get) => ({
       const { data: players, error: playersError } = await supabase
         .from('players')
         .select('*')
-        .eq('user_id', user.id)
         .order('name')
 
       if (playersError) throw playersError
@@ -45,7 +45,6 @@ export const useStore = create((set, get) => ({
       const { data: matchDays, error: matchDaysError } = await supabase
         .from('match_days')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
       if (matchDaysError) throw matchDaysError
@@ -123,7 +122,6 @@ export const useStore = create((set, get) => ({
       const { data: matchDays } = await supabase
         .from('match_days')
         .select('id')
-        .eq('user_id', user.id)
         .or(`backman_a.eq.${id},backman_b.eq.${id}`)
         .contains('players', [id])
 
@@ -134,7 +132,6 @@ export const useStore = create((set, get) => ({
           .from('players')
           .update({ archived: true })
           .eq('id', id)
-          .eq('user_id', user.id)
 
         if (error) throw error
 
@@ -146,7 +143,6 @@ export const useStore = create((set, get) => ({
           .from('players')
           .delete()
           .eq('id', id)
-          .eq('user_id', user.id)
 
         if (error) throw error
 
@@ -190,7 +186,6 @@ export const useStore = create((set, get) => ({
         .from('match_days')
         .update({ date })
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -215,7 +210,6 @@ export const useStore = create((set, get) => ({
         .from('match_days')
         .update(updateData)
         .eq('id', matchId)
-        .eq('user_id', user.id)
         .select()
         .single()
 
@@ -229,7 +223,6 @@ export const useStore = create((set, get) => ({
         .from('match_days')
         .update({ players: [...players] })
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (updateError) throw updateError
 
@@ -260,7 +253,6 @@ export const useStore = create((set, get) => ({
         .from('match_days')
         .update({ players, status: 'teamsheet' })
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -290,7 +282,6 @@ export const useStore = create((set, get) => ({
         .from('match_days')
         .update({ players })
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -319,7 +310,6 @@ export const useStore = create((set, get) => ({
           status: 'teams'
         })
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -371,7 +361,6 @@ export const useStore = create((set, get) => ({
         .from('match_days')
         .update({ team_a: teamA, team_b: teamB, status: 'teams' })
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -407,7 +396,6 @@ export const useStore = create((set, get) => ({
         .from('match_days')
         .update({ [field]: updated })
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -440,7 +428,6 @@ export const useStore = create((set, get) => ({
         .from('match_days')
         .update({ [field]: updated })
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -524,7 +511,6 @@ export const useStore = create((set, get) => ({
           status: 'completed'
         })
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (matchError) throw matchError
 
@@ -546,7 +532,6 @@ export const useStore = create((set, get) => ({
             matches_played: current.matches_played + stats.matchesPlayed,
           })
           .eq('id', playerId)
-          .eq('user_id', user.id)
 
         if (playerError) throw playerError
       }
@@ -594,7 +579,6 @@ export const useStore = create((set, get) => ({
       const match = get().matchDays.find(m => m.id === matchId)
       if (!match) return
 
-      // If completed, reverse every player's stats contributed by this match
       if (match.status === 'completed') {
         const teamA    = match.team_a    || match.teamA    || []
         const teamB    = match.team_b    || match.teamB    || []
@@ -645,7 +629,6 @@ export const useStore = create((set, get) => ({
               matches_played: Math.max(0, current.matches_played - stats.matchesPlayed),
             })
             .eq('id', playerId)
-            .eq('user_id', user.id)
           if (error) throw error
         }
 
@@ -672,7 +655,6 @@ export const useStore = create((set, get) => ({
         .from('match_days')
         .delete()
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (error) throw error
 
@@ -694,7 +676,6 @@ export const useStore = create((set, get) => ({
         .from('match_days')
         .update({ aside_size: size })
         .eq('id', matchId)
-        .eq('user_id', user.id)
 
       if (error) throw error
 
