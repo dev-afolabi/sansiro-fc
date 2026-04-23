@@ -5,32 +5,23 @@ import { useNavigate } from 'react-router-dom'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { signIn, signUp } = useAuth()
+  const { signIn } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-
     try {
-      const { error } = isSignUp
-        ? await signUp(email, password)
-        : await signIn(email, password)
-
+      const { error } = await signIn(email, password)
       if (error) {
         setError(error.message)
       } else {
-        if (isSignUp) {
-          setError('Check your email for the confirmation link')
-        } else {
-          navigate('/')
-        }
+        navigate('/')
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -45,9 +36,7 @@ export default function Login() {
             <span className="text-white text-2xl">⚽</span>
           </div>
           <p className="text-xs uppercase tracking-[0.3em] text-ink-secondary">Welcome back</p>
-          <h1 className="text-2xl font-black text-ink">
-            {isSignUp ? 'Create account' : 'Sign in to Sansiro FC'}
-          </h1>
+          <h1 className="text-2xl font-black text-ink">Sign in to Sansiro FC</h1>
         </div>
 
         <div className="bg-white border border-border rounded-2xl p-6 shadow-sm space-y-4">
@@ -77,7 +66,7 @@ export default function Login() {
             </div>
 
             {error && (
-              <div className={`rounded-xl p-3 text-sm ${error.includes('Check your email') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-live/5 text-live border border-live/20'}`}>
+              <div className="rounded-xl p-3 text-sm bg-live/5 text-live border border-live/20">
                 {error}
               </div>
             )}
@@ -87,19 +76,9 @@ export default function Login() {
               disabled={loading}
               className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Please wait...' : isSignUp ? 'Create account' : 'Sign in'}
+              {loading ? 'Please wait...' : 'Sign in'}
             </button>
           </form>
-
-          <div className="text-center text-sm text-ink-secondary">
-            <button
-              type="button"
-              onClick={() => { setIsSignUp(!isSignUp); setError('') }}
-              className="font-semibold text-ink hover:text-ink-secondary transition-colors"
-            >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Create one"}
-            </button>
-          </div>
         </div>
 
         <div className="text-center pb-2">

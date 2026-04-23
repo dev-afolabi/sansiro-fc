@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useStore } from "../store/useStore";
 import { useAuth } from "../contexts/AuthContext";
-import { formatMatchDate } from "../utils/date";
 
 const statFields = {
   points:        { label: "Pts",  get: (p) => p.points },
@@ -15,6 +13,60 @@ const statFields = {
   matches_played:{ label: "MP",   get: (p) => p.matches_played },
 };
 
+function BarChart({ players, getValue, emptyText }) {
+  const ranked = useMemo(
+    () =>
+      [...players]
+        .filter((p) => !p.archived && getValue(p) > 0)
+        .sort((a, b) => getValue(b) - getValue(a)),
+    [players, getValue]
+  );
+
+  const max = ranked[0] ? getValue(ranked[0]) : 1;
+
+  if (ranked.length === 0) {
+    return (
+      <div className="card text-sm text-ink-secondary text-center py-8">{emptyText}</div>
+    );
+  }
+
+  return (
+    <div className="card p-0 overflow-hidden">
+      <div className="divide-y divide-border">
+        {ranked.map((p, i) => {
+          const value = getValue(p);
+          const pct = Math.max(4, (value / max) * 100);
+          const isTop = i === 0;
+          const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : null;
+
+          return (
+            <div
+              key={p.id}
+              className={`flex items-center gap-3 px-4 py-3 ${isTop ? "bg-live/5" : ""}`}
+            >
+              <span className="w-6 text-xs font-black text-ink-secondary text-right shrink-0">
+                {medal ?? i + 1}
+              </span>
+              <span className="w-[90px] text-sm font-semibold text-ink truncate shrink-0">
+                {p.name}
+              </span>
+              <div className="flex-1 h-4 rounded-full bg-surface border border-border overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${isTop ? "bg-live" : "bg-ink"}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <span className="w-7 text-sm font-black text-ink tabular-nums text-right shrink-0">
+                {value}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Stats() {
   const [tab, setTab] = useState("leaderboard");
   const [sortFields, setSortFields] = useState([
@@ -24,8 +76,7 @@ export default function Stats() {
     { key: "losses", dir: "asc" },
   ]);
   const { user } = useAuth();
-  const { players, matchDays, initializePublicData } = useStore();
-  const navigate = useNavigate();
+  const { players, initializePublicData } = useStore();
 
   useEffect(() => {
     if (!user && players.length === 0) {
@@ -33,7 +84,6 @@ export default function Stats() {
     }
   }, [user, players.length]);
 
-  const completed = useMemo(() => matchDays.filter((m) => m.status === "completed"), [matchDays]);
   const sortedPlayers = useMemo(() => {
     const active = [...players].filter((p) => !p.archived);
     return active.sort((a, b) => {
@@ -69,6 +119,12 @@ export default function Stats() {
     }`;
   };
 
+  const tabs = [
+    { key: "leaderboard", label: "TABLE" },
+    { key: "scorers",     label: "SCORERS" },
+    { key: "assists",     label: "ASSISTS" },
+  ];
+
   return (
     <section className="space-y-4">
       <div className="flex items-baseline justify-between">
@@ -76,19 +132,16 @@ export default function Stats() {
         <span className="text-xs font-semibold uppercase tracking-wider text-ink-secondary">Sansiro FC</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          className={tab === "leaderboard" ? "btn-primary" : "btn-muted"}
-          onClick={() => setTab("leaderboard")}
-        >
-          LEADERBOARD
-        </button>
-        <button
-          className={tab === "history" ? "btn-primary" : "btn-muted"}
-          onClick={() => setTab("history")}
-        >
-          MATCH HISTORY
-        </button>
+      <div className="grid grid-cols-3 gap-2">
+        {tabs.map(({ key, label }) => (
+          <button
+            key={key}
+            className={tab === key ? "btn-primary" : "btn-muted"}
+            onClick={() => setTab(key)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {tab === "leaderboard" && (
@@ -149,32 +202,32 @@ export default function Stats() {
         </div>
       )}
 
-      {tab === "history" && (
-        <div className="space-y-2">
-          {completed.length === 0 ? (
-            <div className="card text-sm text-ink-secondary text-center py-8">
-              No completed matches yet.
-            </div>
-          ) : (
-            completed.map((m) => (
-              <button
-                key={m.id}
-                className="card w-full text-left hover:border-ink transition-colors"
-                onClick={() => navigate(`/match/${m.id}`)}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-ink">{formatMatchDate(m.date)}</span>
-                  <span className="font-black text-2xl text-ink tabular-nums">
-                    {m.scoreA ?? m.score_a} – {m.scoreB ?? m.score_b}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-sm text-ink-secondary">
-                  {m.asideSize || m.aside_size}-aside
-                </p>
-              </button>
-            ))
-          )}
-        </div>
+      {tab === "scorers" && (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-secondary">Top Goal Scorers</p>
+            <span className="text-xs text-ink-secondary">{players.filter(p => !p.archived && p.total_goals > 0).length} players</span>
+          </div>
+          <BarChart
+            players={players}
+            getValue={(p) => p.total_goals}
+            emptyText="No goals recorded yet."
+          />
+        </>
+      )}
+
+      {tab === "assists" && (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-ink-secondary">Assist Kings</p>
+            <span className="text-xs text-ink-secondary">{players.filter(p => !p.archived && p.total_assists > 0).length} players</span>
+          </div>
+          <BarChart
+            players={players}
+            getValue={(p) => p.total_assists}
+            emptyText="No assists recorded yet."
+          />
+        </>
       )}
     </section>
   );
