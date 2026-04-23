@@ -4,11 +4,40 @@ import ShuffleAnimation from "../components/ShuffleAnimation";
 import TeamCard from "../components/TeamCard";
 import { useStore } from "../store/useStore";
 
+function SubAdder({ team, value, onChange, players, allAssigned, onAdd }) {
+  const filtered = players.filter(
+    (p) => !p.archived && !allAssigned.has(p.id) && (value === "" || p.name.toLowerCase().includes(value.toLowerCase()))
+  );
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-ink-secondary">
+        Add Sub — Team {team}
+      </p>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Player name"
+        className="w-full min-h-10 rounded-xl border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-secondary outline-none focus:border-ink transition"
+        list={`sub-list-${team}`}
+      />
+      <datalist id={`sub-list-${team}`}>
+        {filtered.map((p) => <option key={p.id} value={p.name} />)}
+      </datalist>
+      <button
+        onClick={() => onAdd(team, value)}
+        className="w-full min-h-9 rounded-xl bg-[#F4F4F5] text-sm font-semibold text-ink-muted hover:bg-[#EBEBEB] transition-colors"
+      >
+        + Add Sub
+      </button>
+    </div>
+  );
+}
+
 export default function Teams() {
   const navigate = useNavigate();
   const [subInputA, setSubInputA] = useState("");
   const [subInputB, setSubInputB] = useState("");
-  const { activeMatchId, matchDays, players, randomizeTeams, addSubstitute, removeSubstitute } = useStore();
+  const { activeMatchId, matchDays, players, randomizeTeams, addSubstitute, removeSubstitute, createPlayer } = useStore();
   const match = matchDays.find((m) => m.id === activeMatchId);
   const playerMap = useMemo(() => Object.fromEntries(players.map((p) => [p.id, p])), [players]);
 
@@ -33,43 +62,14 @@ export default function Teams() {
   const subsB = match.substitutesB || [];
   const allAssigned = new Set([...teamAIds, ...teamBIds, ...subsA, ...subsB]);
 
-  const eligible = players.filter((p) => !p.archived && !allAssigned.has(p.id));
-
   const handleAddSub = async (team, name) => {
     if (!name.trim()) return;
     const existing = players.find((p) => p.name.toLowerCase() === name.trim().toLowerCase());
-    if (!existing) return;
-    await addSubstitute(match.id, team, existing.id);
+    let playerId = existing?.id;
+    if (!playerId) playerId = await createPlayer(name.trim());
+    if (!playerId) return;
+    await addSubstitute(match.id, team, playerId);
     if (team === "A") setSubInputA(""); else setSubInputB("");
-  };
-
-  const SubAdder = ({ team, value, setValue }) => {
-    const filtered = players.filter(
-      (p) => !p.archived && !allAssigned.has(p.id) && p.name.toLowerCase().includes(value.toLowerCase())
-    );
-    return (
-      <div className="space-y-1.5">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-secondary">
-          Add Sub — Team {team}
-        </p>
-        <input
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="Player name"
-          className="w-full min-h-10 rounded-xl border border-border bg-surface px-3 text-sm text-ink placeholder:text-ink-secondary outline-none focus:border-ink transition"
-          list={`sub-list-${team}`}
-        />
-        <datalist id={`sub-list-${team}`}>
-          {filtered.map((p) => <option key={p.id} value={p.name} />)}
-        </datalist>
-        <button
-          onClick={() => handleAddSub(team, value)}
-          className="w-full min-h-9 rounded-xl bg-[#F4F4F5] text-sm font-semibold text-ink-muted hover:bg-[#EBEBEB] transition-colors"
-        >
-          + Add Sub
-        </button>
-      </div>
-    );
   };
 
   return (
@@ -97,12 +97,10 @@ export default function Teams() {
         />
       </div>
 
-      {eligible.length > 0 && (
-        <div className="card grid grid-cols-2 gap-4">
-          <SubAdder team="A" value={subInputA} setValue={setSubInputA} />
-          <SubAdder team="B" value={subInputB} setValue={setSubInputB} />
-        </div>
-      )}
+      <div className="card grid grid-cols-2 gap-4">
+        <SubAdder team="A" value={subInputA} onChange={setSubInputA} players={players} allAssigned={allAssigned} onAdd={handleAddSub} />
+        <SubAdder team="B" value={subInputB} onChange={setSubInputB} players={players} allAssigned={allAssigned} onAdd={handleAddSub} />
+      </div>
 
       <button className="btn-primary" onClick={() => navigate("/score")}>
         PLAY MATCH

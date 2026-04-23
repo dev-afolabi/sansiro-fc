@@ -586,6 +586,105 @@ export const useStore = create((set, get) => ({
     }
   },
 
+  deleteMatchDay: async (matchId) => {
+    const user = await getUser()
+    if (!user) return
+
+    try {
+      const match = get().matchDays.find(m => m.id === matchId)
+      if (!match) return
+
+      // If completed, reverse every player's stats contributed by this match
+      if (match.status === 'completed') {
+        const teamA    = match.team_a    || match.teamA    || []
+        const teamB    = match.team_b    || match.teamB    || []
+        const subsA    = match.substitutes_a || match.substitutesA || []
+        const subsB    = match.substitutes_b || match.substitutesB || []
+        const allMatchPlayers = [...teamA, ...teamB, ...subsA, ...subsB]
+        const scoreA   = Number(match.score_a ?? match.scoreA)
+        const scoreB   = Number(match.score_b ?? match.scoreB)
+        const goalScorers = match.goal_scorers || match.goalScorers || []
+        const assists     = match.assists || []
+
+        const reversals = {}
+        allMatchPlayers.forEach(playerId => {
+          const isTeamA = teamA.includes(playerId) || subsA.includes(playerId)
+          reversals[playerId] = {
+            totalGoals: 0, totalConceded: isTeamA ? scoreB : scoreA,
+            totalAssists: 0, wins: 0, draws: 0, losses: 0, points: 0, matchesPlayed: 1,
+          }
+        })
+
+        if (scoreA > scoreB) {
+          ;[...teamA, ...subsA].forEach(id => { if (reversals[id]) { reversals[id].wins = 1; reversals[id].points = 3 } })
+          ;[...teamB, ...subsB].forEach(id => { if (reversals[id]) reversals[id].losses = 1 })
+        } else if (scoreB > scoreA) {
+          ;[...teamB, ...subsB].forEach(id => { if (reversals[id]) { reversals[id].wins = 1; reversals[id].points = 3 } })
+          ;[...teamA, ...subsA].forEach(id => { if (reversals[id]) reversals[id].losses = 1 })
+        } else {
+          allMatchPlayers.forEach(id => { if (reversals[id]) { reversals[id].draws = 1; reversals[id].points = 1 } })
+        }
+
+        goalScorers.forEach(({ playerId, count }) => { if (reversals[playerId]) reversals[playerId].totalGoals += count })
+        assists.forEach(({ playerId, count }) => { if (reversals[playerId]) reversals[playerId].totalAssists += count })
+
+        const currentPlayers = get().players
+        for (const [playerId, stats] of Object.entries(reversals)) {
+          const current = currentPlayers.find(p => p.id === playerId)
+          if (!current) continue
+          const { error } = await supabase
+            .from('players')
+            .update({
+              total_goals:    Math.max(0, current.total_goals    - stats.totalGoals),
+              total_conceded: Math.max(0, current.total_conceded - stats.totalConceded),
+              total_assists:  Math.max(0, current.total_assists  - stats.totalAssists),
+              wins:           Math.max(0, current.wins           - stats.wins),
+              draws:          Math.max(0, current.draws          - stats.draws),
+              losses:         Math.max(0, current.losses         - stats.losses),
+              points:         Math.max(0, current.points         - stats.points),
+              matches_played: Math.max(0, current.matches_played - stats.matchesPlayed),
+            })
+            .eq('id', playerId)
+            .eq('user_id', user.id)
+          if (error) throw error
+        }
+
+        set(state => ({
+          players: state.players.map(p => {
+            const r = reversals[p.id]
+            if (!r) return p
+            return {
+              ...p,
+              total_goals:    Math.max(0, p.total_goals    - r.totalGoals),
+              total_conceded: Math.max(0, p.total_conceded - r.totalConceded),
+              total_assists:  Math.max(0, p.total_assists  - r.totalAssists),
+              wins:           Math.max(0, p.wins           - r.wins),
+              draws:          Math.max(0, p.draws          - r.draws),
+              losses:         Math.max(0, p.losses         - r.losses),
+              points:         Math.max(0, p.points         - r.points),
+              matches_played: Math.max(0, p.matches_played - r.matchesPlayed),
+            }
+          })
+        }))
+      }
+
+      const { error } = await supabase
+        .from('match_days')
+        .delete()
+        .eq('id', matchId)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      set(state => ({
+        matchDays: state.matchDays.filter(m => m.id !== matchId),
+        activeMatchId: state.activeMatchId === matchId ? null : state.activeMatchId,
+      }))
+    } catch (error) {
+      console.error('Error deleting match day:', error)
+    }
+  },
+
   updateAsideSize: async (matchId, size) => {
     const user = await getUser()
     if (!user) return

@@ -3,12 +3,10 @@ import { useNavigate } from "react-router-dom";
 import PlayerCard from "../components/PlayerCard";
 import { useStore } from "../store/useStore";
 
-// assignment values: 'A' | 'B' | 'subA' | 'subB'
+// assignment values: 'A' | 'B'
 const ASSIGN_OPTIONS = [
-  { value: "A",    label: "A" },
-  { value: "B",    label: "B" },
-  { value: "subA", label: "S·A" },
-  { value: "subB", label: "S·B" },
+  { value: "A", label: "A" },
+  { value: "B", label: "B" },
 ];
 
 export default function Teamsheet() {
@@ -85,11 +83,9 @@ export default function Teamsheet() {
   const handleConfirmTeams = async () => {
     if (!allAssigned) return;
     setConfirming(true);
-    const teamA  = match.players.filter((id) => assignments[id] === "A");
-    const teamB  = match.players.filter((id) => assignments[id] === "B");
-    const subsA  = match.players.filter((id) => assignments[id] === "subA");
-    const subsB  = match.players.filter((id) => assignments[id] === "subB");
-    await setTeamsManually(match.id, teamA, teamB, subsA, subsB);
+    const teamA = match.players.filter((id) => assignments[id] === "A");
+    const teamB = match.players.filter((id) => assignments[id] === "B");
+    await setTeamsManually(match.id, teamA, teamB, [], []);
     setConfirming(false);
     navigate("/teams");
   };
@@ -114,12 +110,10 @@ export default function Teamsheet() {
         </button>
       </div>
 
-      {/* Squad progress */}
+      {/* Squad progress — counts starters only (asideSize × 2) */}
       <div className="card space-y-2">
         <div className="flex justify-between items-center text-sm">
-          <span className="text-ink-secondary font-medium">
-            {mode === "manual" ? "Squad" : "Squad"}
-          </span>
+          <span className="text-ink-secondary font-medium">Squad</span>
           <span className={`font-black text-base ${ready ? "text-ink" : "text-ink-secondary"}`}>
             {count} / {needed}
           </span>
@@ -191,27 +185,12 @@ export default function Teamsheet() {
       {/* ── MANUAL MODE ── */}
       {mode === "manual" && (
         <>
-          {/* Legend */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className="text-xs text-ink-secondary font-medium">Assign each player:</span>
-            {ASSIGN_OPTIONS.map(({ value, label }) => (
-              <span key={value} className="flex items-center gap-1 text-xs text-ink-secondary">
-                <span className="inline-block w-7 text-center rounded-lg border border-border bg-surface py-0.5 font-bold text-ink text-[11px]">
-                  {label}
-                </span>
-                {value === "A" ? "Team A" : value === "B" ? "Team B" : value === "subA" ? "Sub A" : "Sub B"}
-              </span>
-            ))}
-          </div>
-
           {/* Assignment summary */}
           {count > 0 && (
-            <div className="grid grid-cols-4 gap-1.5 text-center">
+            <div className="grid grid-cols-2 gap-1.5 text-center">
               {[
-                { key: "A",    label: "Team A" },
-                { key: "B",    label: "Team B" },
-                { key: "subA", label: "Sub A" },
-                { key: "subB", label: "Sub B" },
+                { key: "A", label: "Team A" },
+                { key: "B", label: "Team B" },
               ].map(({ key, label }) => {
                 const n = match.players.filter((id) => assignments[id] === key).length;
                 return (
@@ -224,7 +203,7 @@ export default function Teamsheet() {
             </div>
           )}
 
-          {/* Player list with assignment buttons */}
+          {/* Player list with assignment buttons + remove */}
           <div className="space-y-2">
             {match.players.map((id) => {
               const p = playerMap[id];
@@ -245,11 +224,11 @@ export default function Teamsheet() {
                   </div>
 
                   {isBackman ? (
-                    <span className={`text-xs font-bold px-2 py-1 rounded-lg bg-ink text-white shrink-0`}>
+                    <span className="text-xs font-bold px-2 py-1 rounded-lg bg-ink text-white shrink-0">
                       {current === "A" ? "A" : "B"}
                     </span>
                   ) : (
-                    <div className="flex gap-1 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {ASSIGN_OPTIONS.map(({ value, label }) => (
                         <button
                           key={value}
@@ -263,6 +242,12 @@ export default function Teamsheet() {
                           {label}
                         </button>
                       ))}
+                      <button
+                        onClick={() => removePlayerFromTeamsheet(match.id, id)}
+                        className="w-9 h-9 rounded-lg border border-border bg-surface text-ink-secondary hover:text-live hover:border-live transition-colors text-base font-bold"
+                      >
+                        ×
+                      </button>
                     </div>
                   )}
                 </div>

@@ -104,6 +104,8 @@ export default function Stats() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="px-3 py-2 text-xs uppercase tracking-wider text-ink-secondary font-semibold text-left">#</th>
+                  <th className="px-3 py-2 text-xs uppercase tracking-wider text-ink-secondary font-semibold text-left">Player</th>
+                  <th className="px-2 py-2 text-xs uppercase tracking-wider text-ink-secondary font-semibold">MP</th>
                   <th className={thClass("points")} onClick={() => toggleSortKey("points")}>Pts</th>
                   <th className={thClass("total_goals")} onClick={() => toggleSortKey("total_goals")}>GF</th>
                   <th className={thClass("total_conceded")} onClick={() => toggleSortKey("total_conceded")}>GA</th>
@@ -111,8 +113,6 @@ export default function Stats() {
                   <th className={thClass("wins")} onClick={() => toggleSortKey("wins")}>W</th>
                   <th className={thClass("draws")} onClick={() => toggleSortKey("draws")}>D</th>
                   <th className={thClass("losses")} onClick={() => toggleSortKey("losses")}>L</th>
-                  <th className="px-2 py-2 text-xs uppercase tracking-wider text-ink-secondary font-semibold">MP</th>
-                  <th className="px-3 py-2 text-xs uppercase tracking-wider text-ink-secondary font-semibold text-left">Player</th>
                 </tr>
               </thead>
               <tbody>
@@ -131,6 +131,8 @@ export default function Stats() {
                   return (
                     <tr key={p.id} className={`${rowBg} border-b border-border last:border-0`}>
                       <td className="px-3 py-2.5 font-black text-ink">{i + 1}</td>
+                      <td className="px-3 py-2.5 font-semibold text-ink">{p.name}</td>
+                      <td className="px-2 py-2.5 text-ink-secondary tabular-nums text-center">{p.matches_played}</td>
                       <td className="px-2 py-2.5 font-bold text-ink tabular-nums text-center">{p.points}</td>
                       <td className="px-2 py-2.5 text-ink-secondary tabular-nums text-center">{p.total_goals}</td>
                       <td className="px-2 py-2.5 text-ink-secondary tabular-nums text-center">{p.total_conceded}</td>
@@ -138,8 +140,6 @@ export default function Stats() {
                       <td className="px-2 py-2.5 text-ink-secondary tabular-nums text-center">{p.wins}</td>
                       <td className="px-2 py-2.5 text-ink-secondary tabular-nums text-center">{p.draws}</td>
                       <td className="px-2 py-2.5 text-ink-secondary tabular-nums text-center">{p.losses}</td>
-                      <td className="px-2 py-2.5 text-ink-secondary tabular-nums text-center">{p.matches_played}</td>
-                      <td className="px-3 py-2.5 font-semibold text-ink">{p.name}</td>
                     </tr>
                   );
                 })}

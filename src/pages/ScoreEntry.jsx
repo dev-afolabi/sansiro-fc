@@ -10,6 +10,7 @@ export default function ScoreEntry() {
   const [scoreB, setScoreB] = useState(0);
   const [scorers, setScorers] = useState({});
   const [assists, setAssists] = useState({});
+  const [submitting, setSubmitting] = useState(false);
   const playerMap = useMemo(() => Object.fromEntries(players.map((p) => [p.id, p])), [players]);
 
   if (!match) return <div className="card text-ink-secondary">No active match.</div>;
@@ -36,6 +37,8 @@ export default function ScoreEntry() {
   };
 
   const handleSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
     const goalScorers = Object.entries(scorers)
       .filter(([, count]) => count > 0)
       .map(([playerId, count]) => ({ playerId, count }));
@@ -119,8 +122,12 @@ export default function ScoreEntry() {
         ))}
       </div>
 
-      <button className="btn-primary" onClick={handleSubmit}>
-        SUBMIT RESULT
+      <button
+        className={submitting ? "btn-muted" : "btn-primary"}
+        disabled={submitting}
+        onClick={handleSubmit}
+      >
+        {submitting ? "Submitting..." : "SUBMIT RESULT"}
       </button>
     </section>
   );

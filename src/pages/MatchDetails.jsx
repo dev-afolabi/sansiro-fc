@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useStore } from "../store/useStore";
 import { useAuth } from "../contexts/AuthContext";
@@ -8,7 +8,9 @@ export default function MatchDetails() {
   const { matchId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { matchDays, players, initializePublicData } = useStore();
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const { matchDays, players, initializePublicData, deleteMatchDay } = useStore();
   const playerMap = useMemo(() => Object.fromEntries(players.map((p) => [p.id, p])), [players]);
   const match = matchDays.find((m) => m.id === matchId);
 
@@ -41,11 +43,45 @@ export default function MatchDetails() {
     </li>
   );
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    await deleteMatchDay(matchId);
+    navigate("/", { replace: true });
+  };
+
   return (
     <section className="space-y-4">
-      <button onClick={() => navigate(-1)} className="text-sm text-ink-secondary hover:text-ink transition-colors">
-        ← Back
-      </button>
+      <div className="flex items-center justify-between">
+        <button onClick={() => navigate(-1)} className="text-sm text-ink-secondary hover:text-ink transition-colors">
+          ← Back
+        </button>
+        {user && !confirmDelete && (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="text-sm font-semibold text-live hover:text-live/70 transition-colors"
+          >
+            Delete
+          </button>
+        )}
+        {user && confirmDelete && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-ink-secondary">Are you sure?</span>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="text-xs font-semibold text-ink-secondary hover:text-ink transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-xs font-bold text-white bg-live px-2.5 py-1 rounded-lg disabled:opacity-50"
+            >
+              {deleting ? "Deleting..." : "Confirm"}
+            </button>
+          </div>
+        )}
+      </div>
 
       <h2 className="text-4xl font-black uppercase tracking-tight text-ink">Match Details</h2>
 

@@ -12,6 +12,8 @@ export default function Home() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [resultsPage, setResultsPage] = useState(0);
+  const RESULTS_PER_PAGE = 10;
 
   const active = matchDays.find((m) => m.id === activeMatchId && m.status !== "completed");
 
@@ -117,28 +119,56 @@ export default function Home() {
         </div>
       )}
 
-      {completedMatches.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-ink-secondary">Recent Results</p>
-          {completedMatches.slice(0, 10).map((m) => (
-            <button
-              key={m.id}
-              className="card w-full text-left hover:border-ink transition-colors"
-              onClick={() => navigate(`/match/${m.id}`)}
-            >
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-ink">{formatMatchDate(m.date)}</span>
-                <span className="font-black text-xl text-ink tabular-nums">
-                  {m.scoreA ?? m.score_a} – {m.scoreB ?? m.score_b}
-                </span>
+      {completedMatches.length > 0 && (() => {
+        const sorted = [...completedMatches].sort((a, b) => new Date(b.date || b.created_at) - new Date(a.date || a.created_at));
+        const totalPages = Math.ceil(sorted.length / RESULTS_PER_PAGE);
+        const paged = sorted.slice(resultsPage * RESULTS_PER_PAGE, (resultsPage + 1) * RESULTS_PER_PAGE);
+        return (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-ink-secondary">Recent Results</p>
+              {totalPages > 1 && (
+                <span className="text-xs text-ink-secondary">{resultsPage + 1} / {totalPages}</span>
+              )}
+            </div>
+            {paged.map((m) => (
+              <button
+                key={m.id}
+                className="card w-full text-left hover:border-ink transition-colors"
+                onClick={() => navigate(`/match/${m.id}`)}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-ink">{formatMatchDate(m.date)}</span>
+                  <span className="font-black text-xl text-ink tabular-nums">
+                    {m.scoreA ?? m.score_a} – {m.scoreB ?? m.score_b}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-sm text-ink-secondary">
+                  {m.asideSize || m.aside_size}-aside
+                </p>
+              </button>
+            ))}
+            {totalPages > 1 && (
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  className="btn-muted"
+                  disabled={resultsPage === 0}
+                  onClick={() => setResultsPage(p => p - 1)}
+                >
+                  ← Newer
+                </button>
+                <button
+                  className="btn-muted"
+                  disabled={resultsPage >= totalPages - 1}
+                  onClick={() => setResultsPage(p => p + 1)}
+                >
+                  Older →
+                </button>
               </div>
-              <p className="mt-0.5 text-sm text-ink-secondary">
-                {m.asideSize || m.aside_size}-aside
-              </p>
-            </button>
-          ))}
-        </div>
-      )}
+            )}
+          </div>
+        );
+      })()}
 
       <Modal isOpen={showConfirm} onClose={() => setShowConfirm(false)} title="Active Match Exists">
         <p className="text-sm text-ink-secondary mb-4">

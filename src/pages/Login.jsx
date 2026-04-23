@@ -100,6 +100,16 @@ export default function Login() {
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Create one"}
             </button>
           </div>
+
+          <div className="text-center pt-1">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="text-sm text-ink-secondary hover:text-ink transition-colors"
+            >
+              ← Back to Home
+            </button>
+          </div>
         </div>
       </div>
     </div>
